@@ -34,20 +34,32 @@ class Record:
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
     def add_phone(self, phone):
+        for p in self.phones:
+            if p.value == phone:
+                print(f"{self.name}`s record contains this phone number: {phone}")
+                return
+
         try:
             self.phones.append(Phone(phone))
         except InvalidPhoneLength:
             print("The phone number must be 10 characters long.")
 
     def remove_phone(self, phone):
-        self.phones = list(filter(lambda p: p.value != phone, self.phones))
+        filtered_phone = list(filter(lambda p: p.value != phone, self.phones))
+
+        if len(filtered_phone) == len(self.phones):
+            print(f"{phone} phone number is not in the current record")
+        else:
+            self.phones = filtered_phone
 
     def edit_phone(self, old_phone, new_phone):
         try:
             for i, phone in enumerate(self.phones):
                 if phone.value == old_phone:
                     self.phones[i] = Phone(new_phone)
-                    break
+                    return
+
+            print(f"{self.name}`s record contains this phone number: {new_phone}")
         except InvalidPhoneLength:
             print("The phone number must be 10 characters long.")
 
@@ -56,16 +68,29 @@ class Record:
             if p.value == phone:
                 return phone
 
+        return f"{phone} phone number is not in the current record"
+
 
 class AddressBook(UserDict):
     def add_record(self, record):
-        self.data[record.name.value] = record
+        name = record.name.value
+
+        if name in self.data:
+            print(f"A person with name {name} already exists.")
+        else:
+            self.data[name] = record
 
     def find(self, name):
-        return self.data.get(name)
+        if not name in self.data:
+            return f"A person with name {name} is not in your phone book"
+        else:
+            return self.data.get(name)
 
     def delete(self, name):
-        self.data.pop(name)
+        if not name in self.data:
+            print(f"A person with name {name} is not in your phone book")
+        else:
+            self.data.pop(name)
 
 
 # Створення нової адресної книги
@@ -79,6 +104,7 @@ john_record.add_phone("5555555555")
 
 # Додавання запису John до адресної книги
 book.add_record(john_record)
+
 
 # Створення та додавання нового запису для Jane
 jane_record = Record("Jane")
