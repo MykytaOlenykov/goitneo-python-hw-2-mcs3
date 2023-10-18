@@ -5,6 +5,16 @@ class InvalidPhoneLength(Exception):
     pass
 
 
+def catch_error(func):
+    def inner(*args, **kwargs):
+        try:
+            return func(*args, **kwargs)
+        except InvalidPhoneLength:
+            return "The phone number must be 10 characters long."
+
+    return inner
+
+
 class Field:
     def __init__(self, value):
         self.value = value
@@ -33,15 +43,14 @@ class Record:
     def __str__(self):
         return f"Contact name: {self.name.value}, phones: {'; '.join(p.value for p in self.phones)}"
 
-    def add_phone(self, phone):
-        for p in self.phones:
-            if p.value == phone:
-                return f"{self.name}`s record contains this phone number: {phone}"
+    @catch_error
+    def add_phone(self, new_phone):
+        for phone in self.phones:
+            if phone.value == new_phone:
+                return f"{self.name}`s record contains this phone number: {new_phone}"
 
-        try:
-            self.phones.append(Phone(phone))
-        except InvalidPhoneLength:
-            return "The phone number must be 10 characters long."
+        self.phones.append(Phone(new_phone))
+        return "Phone added."
 
     def remove_phone(self, phone):
         filtered_phone = list(filter(lambda p: p.value != phone, self.phones))
@@ -50,22 +59,27 @@ class Record:
             return f"{phone} phone number is not in the current record"
         else:
             self.phones = filtered_phone
+            return "Phone removed."
 
+    @catch_error
     def edit_phone(self, old_phone, new_phone):
-        try:
-            for i, phone in enumerate(self.phones):
-                if phone.value == old_phone:
-                    self.phones[i] = Phone(new_phone)
-                    return
+        new_phone = Phone(new_phone)
 
-            return f"{self.name}`s record contains this phone number: {new_phone}"
-        except InvalidPhoneLength:
-            return "The phone number must be 10 characters long."
+        for phone in self.phones:
+            if phone.value == new_phone.value:
+                return f"{self.name}`s record contains this phone number: {new_phone.value}"
+
+        for i, phone in enumerate(self.phones):
+            if phone.value == old_phone:
+                self.phones[i] = new_phone
+                return "Phone edited."
+
+        return f"{old_phone} phone number is not in the current record"
 
     def find_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
-                return phone
+                return p
 
         return f"{phone} phone number is not in the current record"
 
@@ -78,18 +92,20 @@ class AddressBook(UserDict):
             return f"A person with name {name} already exists."
         else:
             self.data[name] = record
+            return "Record added."
 
     def find(self, name):
         if not name in self.data:
             return f"A person with name {name} is not in your phone book"
         else:
-            return self.data.get(name)
+            return self.data[name]
 
     def delete(self, name):
         if not name in self.data:
             return f"A person with name {name} is not in your phone book"
         else:
             self.data.pop(name)
+            return "Record deleted."
 
 
 # Створення нової адресної книги
