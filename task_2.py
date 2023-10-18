@@ -36,19 +36,18 @@ class Record:
     def add_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
-                print(f"{self.name}`s record contains this phone number: {phone}")
-                return
+                return f"{self.name}`s record contains this phone number: {phone}"
 
         try:
             self.phones.append(Phone(phone))
         except InvalidPhoneLength:
-            print("The phone number must be 10 characters long.")
+            return "The phone number must be 10 characters long."
 
     def remove_phone(self, phone):
         filtered_phone = list(filter(lambda p: p.value != phone, self.phones))
 
         if len(filtered_phone) == len(self.phones):
-            print(f"{phone} phone number is not in the current record")
+            return f"{phone} phone number is not in the current record"
         else:
             self.phones = filtered_phone
 
@@ -59,9 +58,9 @@ class Record:
                     self.phones[i] = Phone(new_phone)
                     return
 
-            print(f"{self.name}`s record contains this phone number: {new_phone}")
+            return f"{self.name}`s record contains this phone number: {new_phone}"
         except InvalidPhoneLength:
-            print("The phone number must be 10 characters long.")
+            return "The phone number must be 10 characters long."
 
     def find_phone(self, phone):
         for p in self.phones:
@@ -76,7 +75,7 @@ class AddressBook(UserDict):
         name = record.name.value
 
         if name in self.data:
-            print(f"A person with name {name} already exists.")
+            return f"A person with name {name} already exists."
         else:
             self.data[name] = record
 
@@ -88,7 +87,7 @@ class AddressBook(UserDict):
 
     def delete(self, name):
         if not name in self.data:
-            print(f"A person with name {name} is not in your phone book")
+            return f"A person with name {name} is not in your phone book"
         else:
             self.data.pop(name)
 
