@@ -1,7 +1,7 @@
 from collections import UserDict
 
 
-class InvalidPhoneLength(Exception):
+class InvalidPhone(Exception):
     pass
 
 
@@ -34,8 +34,8 @@ def catch_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
-        except InvalidPhoneLength:
-            return "The phone number must be 10 characters long."
+        except InvalidPhone:
+            return "The phone number must be 10 numbers."
         except RecordNotFound as error:
             return f"A person with name {error.name} is not in your phone book"
         except RecordConflict as error:
@@ -62,8 +62,8 @@ class Name(Field):
 
 class Phone(Field):
     def __init__(self, value):
-        if len(value) != 10:
-            raise InvalidPhoneLength
+        if len(value) != 10 or not value.isdigit():
+            raise InvalidPhone
 
         super().__init__(value)
 
