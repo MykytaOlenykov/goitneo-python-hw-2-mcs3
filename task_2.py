@@ -62,7 +62,7 @@ class Name(Field):
 
 class Phone(Field):
     def __init__(self, value):
-        if len(value) != 10:
+        if len(value) != 10 or not value.isdigit():
             raise InvalidPhone
 
         super().__init__(value)
