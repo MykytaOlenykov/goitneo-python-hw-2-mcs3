@@ -5,12 +5,45 @@ class InvalidPhoneLength(Exception):
     pass
 
 
+class RecordNotFound(Exception):
+    def __init__(self, name, *args):
+        super().__init__(*args)
+        self.name = name
+
+
+class RecordConflict(Exception):
+    def __init__(self, name, *args):
+        super().__init__(*args)
+        self.name = name
+
+
+class PhoneNotFound(Exception):
+    def __init__(self, phone, *args):
+        super().__init__(*args)
+        self.phone = phone
+
+
+class PhoneConflict(Exception):
+    def __init__(self, name, phone, *args):
+        super().__init__(*args)
+        self.name = name
+        self.phone = phone
+
+
 def catch_error(func):
     def inner(*args, **kwargs):
         try:
             return func(*args, **kwargs)
         except InvalidPhoneLength:
             return "The phone number must be 10 characters long."
+        except RecordNotFound as error:
+            return f"A person with name {error.name} is not in your phone book"
+        except RecordConflict as error:
+            return f"A person with name {error.name} already exists."
+        except PhoneNotFound as error:
+            return f"{error.phone} phone number is not in the current record"
+        except PhoneConflict as error:
+            return f"{error.name}`s record contains {error.phone} phone number"
 
     return inner
 
@@ -47,16 +80,17 @@ class Record:
     def add_phone(self, new_phone):
         for phone in self.phones:
             if phone.value == new_phone:
-                return f"{self.name}`s record contains this phone number: {new_phone}"
+                raise PhoneConflict(self.name.value, new_phone)
 
         self.phones.append(Phone(new_phone))
         return "Phone added."
 
+    @catch_error
     def remove_phone(self, phone):
         filtered_phone = list(filter(lambda p: p.value != phone, self.phones))
 
         if len(filtered_phone) == len(self.phones):
-            return f"{phone} phone number is not in the current record"
+            raise PhoneNotFound(phone)
         else:
             self.phones = filtered_phone
             return "Phone removed."
@@ -67,42 +101,46 @@ class Record:
 
         for phone in self.phones:
             if phone.value == new_phone.value:
-                return f"{self.name}`s record contains this phone number: {new_phone.value}"
+                raise PhoneConflict(self.name.value, new_phone.value)
 
         for i, phone in enumerate(self.phones):
             if phone.value == old_phone:
                 self.phones[i] = new_phone
                 return "Phone edited."
 
-        return f"{old_phone} phone number is not in the current record"
+        raise PhoneNotFound(old_phone)
 
+    @catch_error
     def find_phone(self, phone):
         for p in self.phones:
             if p.value == phone:
                 return p
 
-        return f"{phone} phone number is not in the current record"
+        raise PhoneNotFound(phone)
 
 
 class AddressBook(UserDict):
+    @catch_error
     def add_record(self, record):
         name = record.name.value
 
         if name in self.data:
-            return f"A person with name {name} already exists."
+            raise RecordConflict(name)
         else:
             self.data[name] = record
             return "Record added."
 
+    @catch_error
     def find(self, name):
         if not name in self.data:
-            return f"A person with name {name} is not in your phone book"
+            raise RecordNotFound(name)
         else:
             return self.data[name]
 
+    @catch_error
     def delete(self, name):
         if not name in self.data:
-            return f"A person with name {name} is not in your phone book"
+            raise RecordNotFound(name)
         else:
             self.data.pop(name)
             return "Record deleted."
